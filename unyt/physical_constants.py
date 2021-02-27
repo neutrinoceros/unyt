@@ -26,5 +26,23 @@ For example::
 
 from unyt.unit_registry import default_unit_registry as _default_unit_registry
 from unyt.unit_systems import add_constants as _add_constants
+import pickle
+from copy import copy
+import os
+savefile = os.path.join(os.getcwd(), "unyt_save.pickle")
 
-_add_constants(globals(), registry=_default_unit_registry)
+if os.path.exists(savefile):
+    with open(savefile, "rb") as fh:
+        reg = pickle.load(fh)
+    globals().update(reg)
+else:
+    g1 = copy(globals())
+    _add_constants(globals(), registry=_default_unit_registry)
+
+    g2 = copy(globals())
+    g2.pop("g1")
+
+    diff = set(g2).difference(set(g1))
+
+    with open(savefile, "wb") as fh:
+        pickle.dump({k: g2[k] for k in diff}, fh)
